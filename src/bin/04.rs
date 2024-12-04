@@ -76,8 +76,54 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(res)
 }
 
+fn check_chars(c1: char, c2: char, c3: char, c4: char) -> bool {
+    return (c1 == 'S' || c1 == 'M')
+        && (c2 == 'S' || c2 == 'M')
+        && (c3 == 'S' || c3 == 'M')
+        && (c4 == 'S' || c4 == 'M');
+}
+
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let matrix: Vec<Vec<char>> = input
+        .trim()
+        .lines()
+        .map(|line| line.trim().chars().collect())
+        .collect();
+
+    let mut res = 0;
+
+    for i in 0..matrix.len() {
+        for j in 0..matrix[0].len() {
+            match matrix[i][j] {
+                'A' => {
+                    if (i >= 1)
+                        && (j >= 1)
+                        && (i + 1 < matrix.len())
+                        && (j + 1 < matrix[0].len())
+                        && check_chars(
+                            matrix[i - 1][j - 1],
+                            matrix[i - 1][j + 1],
+                            matrix[i + 1][j - 1],
+                            matrix[i + 1][j + 1],
+                        )
+                    {
+                        if (matrix[i - 1][j - 1] == matrix[i - 1][j + 1]
+                            && matrix[i + 1][j - 1] == matrix[i + 1][j + 1]
+                            && matrix[i - 1][j - 1] != matrix[i + 1][j - 1])
+                            || (matrix[i - 1][j - 1] == matrix[i + 1][j - 1]
+                                && matrix[i - 1][j + 1] == matrix[i + 1][j + 1]
+                                && matrix[i - 1][j - 1] != matrix[i - 1][j + 1])
+                        {
+                            res += 1;
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    Some(res)
 }
 
 #[cfg(test)]
@@ -93,6 +139,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(9));
     }
 }
