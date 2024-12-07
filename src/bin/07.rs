@@ -3,6 +3,7 @@ advent_of_code::solution!(7);
 enum Operators {
     Add,
     Multiply,
+    Concatenation,
 }
 
 fn generate_combinations(operators: Vec<&Operators>, n: usize) -> Vec<Vec<&Operators>> {
@@ -55,6 +56,7 @@ pub fn part_one(input: &str) -> Option<u64> {
                     Operators::Multiply => {
                         local_res *= values[i + 1];
                     }
+                    Operators::Concatenation => {}
                 }
             }
 
@@ -68,8 +70,55 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(res)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    let mut res: u64 = 0;
+
+    for line in input.lines() {
+        let splitted: Vec<&str> = line.split(":").collect();
+        assert!(splitted.len() == 2);
+        let equation_result = splitted[0].parse::<u64>().unwrap();
+        let values: Vec<u64> = splitted[1]
+            .trim()
+            .split(" ")
+            .map(|v| v.parse::<u64>().unwrap())
+            .collect();
+
+        let combinations = generate_combinations(
+            vec![
+                &Operators::Add,
+                &Operators::Multiply,
+                &Operators::Concatenation,
+            ],
+            values.len() - 1,
+        );
+
+        for c in combinations {
+            let mut local_res = values[0];
+            assert!(c.len() == values.len() - 1);
+            for i in 0..c.len() {
+                match c[i] {
+                    Operators::Add => {
+                        local_res += values[i + 1];
+                    }
+                    Operators::Multiply => {
+                        local_res *= values[i + 1];
+                    }
+                    Operators::Concatenation => {
+                        let mut local_res_str = local_res.to_string();
+                        local_res_str.push_str(&values[i + 1].to_string());
+                        local_res = local_res_str.parse::<u64>().unwrap();
+                    }
+                }
+            }
+
+            if local_res == equation_result {
+                res += equation_result;
+                break;
+            }
+        }
+    }
+
+    Some(res)
 }
 
 #[cfg(test)]
@@ -85,6 +134,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(11387));
     }
 }
