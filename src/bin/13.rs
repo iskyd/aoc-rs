@@ -106,8 +106,76 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(res)
 }
 
-pub fn part_two(input: &str) -> Option<u64> {
+fn cramer_min_tokens(claw_machine: ClawMachine) -> Option<isize> {
+    let det = (claw_machine.button_a.x * claw_machine.button_b.y) as isize
+        - (claw_machine.button_a.y * claw_machine.button_b.x) as isize;
+    let a = ((claw_machine.prize.x * claw_machine.button_b.y) as isize
+        - (claw_machine.prize.y * claw_machine.button_b.x) as isize)
+        / det;
+    let b = ((claw_machine.prize.y * claw_machine.button_a.x) as isize
+        - (claw_machine.prize.x * claw_machine.button_a.y) as isize)
+        / det;
+
+    if claw_machine.button_a.x as isize * a + claw_machine.button_b.x as isize * b
+        == claw_machine.prize.x as isize
+        && claw_machine.button_a.y as isize * a + claw_machine.button_b.y as isize * b
+            == claw_machine.prize.y as isize
+    {
+        return Some(a * 3 + b);
+    }
     None
+}
+
+pub fn part_two(input: &str) -> Option<isize> {
+    let lines: Vec<&str> = input.trim().lines().collect();
+    let mut machines: Vec<ClawMachine> = vec![];
+    let mut i = 0;
+    while i < lines.len() {
+        let a_movements: Vec<u64> = lines[i][10..]
+            .split(',')
+            .map(|v| v.trim()[2..].parse::<u64>().unwrap())
+            .collect();
+        let button_a = ButtonMovement {
+            x: a_movements[0],
+            y: a_movements[1],
+        };
+
+        let b_movements: Vec<u64> = lines[i + 1][10..]
+            .split(',')
+            .map(|v| v.trim()[2..].parse::<u64>().unwrap())
+            .collect();
+        let button_b = ButtonMovement {
+            x: b_movements[0],
+            y: b_movements[1],
+        };
+
+        let points: Vec<u64> = lines[i + 2][6..]
+            .split(',')
+            .map(|v| v.trim()[2..].parse::<u64>().unwrap())
+            .collect();
+        let prize = Point {
+            x: points[0] + 10000000000000,
+            y: points[1] + 10000000000000,
+        };
+
+        let claw_machine = ClawMachine {
+            prize,
+            button_a,
+            button_b,
+        };
+        machines.push(claw_machine);
+        i += 4;
+    }
+
+    let mut res = 0;
+    for claw_machine in machines {
+        match cramer_min_tokens(claw_machine) {
+            Some(t) => res += t,
+            None => {}
+        }
+    }
+
+    Some(res)
 }
 
 #[cfg(test)]
@@ -123,6 +191,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(875318608908));
     }
 }
